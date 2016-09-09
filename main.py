@@ -1,12 +1,15 @@
 from __future__ import print_function
 import httplib2
 import os
+from trello import TrelloClient
+import webbrowser
 import fileinput
 import dateparser
 from apiclient import discovery
 import oauth2client
 from oauth2client import client
 from oauth2client import tools
+import sys
 
 try:
     import argparse
@@ -18,11 +21,7 @@ except ImportError:
 # at ~/.credentials/sheets.googleapis.com-python-quickstart.json
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 CLIENT_SECRET_FILE = 'client_secret.json'
-APPLICATION_NAME = 'Google Sheets API Python Quickstart'
-
-
-def get_sheet_data():
-    print("todo")
+APPLICATION_NAME = 'GSheets2TBoards'
 
 
 def get_credentials():
@@ -55,7 +54,15 @@ def get_credentials():
 
 
 def main():
-    import sys
+
+    print("""Hi there!\nWelcome to Google Sheet to Trello Board converter.
+    Before we can get started, a couple of things are needed; spreadsheets id.
+    Spreadsheet id is the the collection of numbers and chars after /d/ in the sheets URL like:
+    https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
+                      where the id is: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms
+            """)
+    spreadsheetId=input('Enter spreadsheet id:')
+    print (spreadsheetId)
     if sys.version_info <= (3, 0):
         sys.stdout.write('Sorry, requires Python 3.x, not Python 2.x\n')
         sys.exit(1)
@@ -74,28 +81,46 @@ def main():
                               discoveryServiceUrl=discoveryUrl)
 
     spreadsheetId = '1g9ri4om_g29N2j6jPrVXMZpI719R9fmeBBufR4ry2ts'
-    rangeName = 'Pre-conf!A3:G70'
+    rangeName = 'Pre-conf!A3:G'
+    sheet=service.spreadsheets().get(spreadsheetId=spreadsheetId).execute()
+    sheetName=sheet['properties']['title']
+
     result = service.spreadsheets().values().get(
         spreadsheetId=spreadsheetId, range=rangeName).execute()
     values = result.get('values', [])
-    simpleList = []
+    tasks = []
 
     if not values:
         print('No data found.')
     else:
         for row in values:
 
-
-            # Print columns A and E, which correspond to indices 0 and 4.
-            #print('%s' % (row[0]))
             if len(row)>6:
                 date= dateparser.parse(row[6])
-                simpleList.append({'task': row[0], 'description': row[1], 'date': date})
-                #print('%s, %s' % (row[0], row[6]))
+                tasks.append({'task': row[0], 'description': row[1], 'date': row[6]})
 
             else:
                 print("Task with name %s does not have a date"% row[0])
-        print (simpleList)
+
+        print("Opening auth website")
+        webbrowser.open_new(
+            'https://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&name=Praqma%20Sheetconv&key=72ff9314b2d9e1cca758d131e761117e')
+        api_token = input("paste the token you receive in here: ")
+        print(api_token)
+        client = TrelloClient(
+            api_key='72ff9314b2d9e1cca758d131e761117e',
+            api_secret='a475e69f4a864b6d7d2c729f00a255cefc89194c903d450f8da081ba911b016d',
+            token=api_token,
+            token_secret='your-oauth-token-secret'
+        )
+
+        board = client.add_board(sheetName)
+        id = board.id
+
+        list = board.add_list('Todo')
+        for i in tasks:
+            print(i)
+            list.add_card(name=i['task'], due=i['date'],desc=i['description'])
 
 if __name__ == '__main__':
     main()
