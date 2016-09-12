@@ -55,20 +55,20 @@ def get_credentials():
 
 def main():
 
+    if sys.version_info <= (3, 0):
+        sys.stdout.write('Sorry, requires Python 3.x, not Python 2.x\n')
+        sys.exit(1)
+
     print("""Hi there!\nWelcome to Google Sheet to Trello Board converter.
     Before we can get started, a couple of things are needed; spreadsheets id.
     Spreadsheet id is the the collection of numbers and chars after /d/ in the sheets URL like:
     https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
                       where the id is: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms
             """)
-    spreadsheetId=input('Enter spreadsheet id:')
-    print (spreadsheetId)
-    if sys.version_info <= (3, 0):
-        sys.stdout.write('Sorry, requires Python 3.x, not Python 2.x\n')
-        sys.exit(1)
+    spreadsheet_id=input('Enter spreadsheet id:')
+
 
     """Shows basic usage of the Sheets API.
-
     Creates a Sheets API service object and prints the names and majors of
     students in a sample spreadsheet:
     https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
@@ -80,29 +80,31 @@ def main():
     service = discovery.build('sheets', 'v4', http=http,
                               discoveryServiceUrl=discoveryUrl)
 
-    spreadsheetId = '1g9ri4om_g29N2j6jPrVXMZpI719R9fmeBBufR4ry2ts'
-    rangeName = 'Pre-conf!A3:G'
-    sheet=service.spreadsheets().get(spreadsheetId=spreadsheetId).execute()
-    sheetName=sheet['properties']['title']
+    if spreadsheet_id=='':
+        spreadsheet_id = '1g9ri4om_g29N2j6jPrVXMZpI719R9fmeBBufR4ry2ts'
+    print(spreadsheet_id)
+    range_names = ['Pre-conf!A3:G','Post-conf!A3:G']
+    sheet=service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
+    sheet_name=sheet['properties']['title']
+    results=service.spreadsheets().values().batchGet(
+        spreadsheetId=spreadsheet_id, ranges=range_names).execute()
 
-    result = service.spreadsheets().values().get(
-        spreadsheetId=spreadsheetId, range=rangeName).execute()
-    values = result.get('values', [])
+    values = results.get('valueRanges', [])
+
     tasks = []
-
+    simple_tasks=[]
     if not values:
         print('No data found.')
     else:
-        for row in values:
+        for range in values:
+            for row in range['values']:
+                if len(row)>6:
+                    tasks.append({'task': row[0], 'description': row[1], 'date': row[6]})
 
-            if len(row)>6:
-                date= dateparser.parse(row[6])
-                tasks.append({'task': row[0], 'description': row[1], 'date': row[6]})
+                else:
+                    simple_tasks.append(row[0])
 
-            else:
-                print("Task with name %s does not have a date"% row[0])
-
-        print("Opening auth website")
+        print("Opening auth website, accept to let the script have access to your account.")
         webbrowser.open_new(
             'https://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&name=Praqma%20Sheetconv&key=72ff9314b2d9e1cca758d131e761117e')
         api_token = input("paste the token you receive in here: ")
@@ -114,13 +116,16 @@ def main():
             token_secret='your-oauth-token-secret'
         )
 
-        board = client.add_board(sheetName)
+        board = client.add_board(sheet_name)
         id = board.id
-
-        list = board.add_list('Todo')
+        print("importing tasks....")
+        for old_list in board.all_lists():
+            if old_list.name=='To Do':
+                list=board.get_list(old_list.id)
         for i in tasks:
-            print(i)
             list.add_card(name=i['task'], due=i['date'],desc=i['description'])
-
+        for i in simple_tasks:
+            list.add_card(name=i)
+        print("imported. Go into www.trello.com to find your new board named "+sheet_name)
 if __name__ == '__main__':
     main()
