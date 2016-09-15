@@ -4,7 +4,6 @@ import os
 from trello import TrelloClient
 import webbrowser
 import fileinput
-import dateparser
 from apiclient import discovery
 import oauth2client
 from oauth2client import client
