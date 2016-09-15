@@ -59,12 +59,12 @@ def main():
         sys.exit(1)
 
     print("""Hi there!\nWelcome to Google Sheet to Trello Board converter.
-    Before we can get started, a couple of things are needed; spreadsheets id.
-    Spreadsheet id is the the collection of numbers and chars after /d/ in the sheets URL like:
+    Before we can get started, a couple of things are needed; the spreadsheet's ID.
+    Spreadsheet ID is the the collection of numbers and characters between /d/ and / in the sheet's URL like:
     https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
                       where the id is: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms
             """)
-    spreadsheet_id=input('Enter spreadsheet id:')
+    spreadsheet_id=input("Enter the spreadsheet's ID:")
 
 
     """Shows basic usage of the Sheets API.
@@ -103,10 +103,10 @@ def main():
                 else:
                     simple_tasks.append(row[0])
 
-        print("Opening auth website, accept to let the script have access to your account.")
+        print("Trello's authorization website opens automatically. Press 'accept' to let the script have access to your account.")
         webbrowser.open_new(
             'https://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&name=Praqma%20Sheetconv&key=72ff9314b2d9e1cca758d131e761117e')
-        api_token = input("paste the token you receive in here: ")
+        api_token = input("Paste the token you receive on Trello in here: ")
         print(api_token)
         client = TrelloClient(
             api_key='72ff9314b2d9e1cca758d131e761117e',
