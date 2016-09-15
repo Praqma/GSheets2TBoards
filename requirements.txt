@@ -1,0 +1,5 @@
+dateparser==0.4.0
+httplib2==0.9.2
+py_trello==0.6.1
+google_api_python_client==1.5.3
+trello==0.9.1
