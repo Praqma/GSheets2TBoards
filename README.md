@@ -10,7 +10,7 @@ You need to have read access to the sheet importing from.
 After the import, you have a personal trello board.
 
 ##Installation on MacOSX
-First off: install Xcode
+First off do you have homebrew? if not then install xCode:
 https://itunes.apple.com/en/app/xcode/id497799835?mt=12
 After that, open terminal and run:
 
