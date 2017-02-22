@@ -80,9 +80,9 @@ def main():
                               discoveryServiceUrl=discoveryUrl)
 
     if spreadsheet_id=='':
-        spreadsheet_id = '1g9ri4om_g29N2j6jPrVXMZpI719R9fmeBBufR4ry2ts'
+        spreadsheet_id = '1HFU0lhE45XY7yQTgo35wRKJtNneKma87tES9M82LnGQ'
     print(spreadsheet_id)
-    range_names = ['Pre-conf!A3:G','Post-conf!A3:G']
+    range_names = ['Tasks!A3:G']
     sheet=service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
     sheet_name=sheet['properties']['title']
     results=service.spreadsheets().values().batchGet(
@@ -98,7 +98,7 @@ def main():
         for range in values:
             for row in range['values']:
                 if len(row)>6:
-                    tasks.append({'task': row[0], 'description': row[1], 'date': row[6]})
+                    tasks.append({'task': row[0], 'description': row[1], 'date': row[7]})
 
                 else:
                     simple_tasks.append(row[0])
