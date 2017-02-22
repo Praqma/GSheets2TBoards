@@ -103,10 +103,8 @@ def main():
                 else:
                     simple_tasks.append(row[0])
 
-        print("Trello's authorization website opens automatically. Press 'accept' to let the script have access to your account.")
-        webbrowser.open_new(
-            'https://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&name=Praqma%20Sheetconv&key=72ff9314b2d9e1cca758d131e761117e')
-        api_token = input("Paste the token you receive on Trello in here: ")
+        print("\nPlease copy this link in your browser: \n\nhttps://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&name=Praqma%20Sheetconv&key=72ff9314b2d9e1cca758d131e761117e \n\nPress 'accept' to let the script have access to your account.")
+        api_token = input("\nPaste the token you receive on Trello in here: ")
         print(api_token)
         client = TrelloClient(
             api_key='72ff9314b2d9e1cca758d131e761117e',
