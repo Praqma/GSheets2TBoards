@@ -46,23 +46,24 @@ def get_credentials():
         flow.user_agent = APPLICATION_NAME
         if flags:
             credentials = tools.run_flow(flow, store, flags)
-        else: # Needed only for compatibility with Python 2.6
-            credentials = tools.run(flow, store)
         print('Storing credentials to ' + credential_path)
     return credentials
 
 
 def main():
 
-    if sys.version_info <= (3, 0):
-        sys.stdout.write('Sorry, requires Python 3.x, not Python 2.x\n')
-        sys.exit(1)
+    print("""
 
-    print("""Hi there!\nWelcome to Google Sheet to Trello Board converter.
-    Before we can get started, a couple of things are needed; the spreadsheet's ID.
-    Spreadsheet ID is the the collection of numbers and characters between /d/ and / in the sheet's URL like:
-    https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit
-                      where the id is: 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms
+    Hi there!
+
+    Welcome to Google Sheet to Trello Board converter.
+
+        Before we can get started, a couple of things are needed; the spreadsheet's ID.
+        Spreadsheet ID is the the collection of numbers and characters between /d/ and / in the sheet's URL like:
+        https://docs.google.com/spreadsheets/d/1HFU0lhE45XY7yQTgo35wRKJtNneKma87tES9M82LnGQ/edit
+                      where the id is: 1HFU0lhE45XY7yQTgo35wRKJtNneKma87tES9M82LnGQ.
+
+    If you are using the 'Template - Conference Planning' with the id in the example, just push enter.
             """)
     spreadsheet_id=input("Enter the spreadsheet's ID:")
 
@@ -81,31 +82,38 @@ def main():
 
     if spreadsheet_id=='':
         spreadsheet_id = '1HFU0lhE45XY7yQTgo35wRKJtNneKma87tES9M82LnGQ'
-    print(spreadsheet_id)
-    range_names = ['Tasks!A3:G']
-    sheet=service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
-    sheet_name=sheet['properties']['title']
+
+    range_others = ['Stem data!B1', 'Stem data!B4', 'Stem data!B5', 'Stem data!A11:A31']
+    results_other=service.spreadsheets().values().batchGet(
+        spreadsheetId=spreadsheet_id, ranges=range_others).execute()
+    date = results_other['valueRanges'][0]['values'][0][0]
+    title = results_other['valueRanges'][1]['values'][0][0]
+    if 'values' in results_other['valueRanges'][2]:
+        color = results_other['valueRanges'][2]['values'][0][0]
+    else:
+        color = ""
+    columns = results_other['valueRanges'][3]['values']
+
+
+    range_data = ['Tasks!A3:G']
     results=service.spreadsheets().values().batchGet(
-        spreadsheetId=spreadsheet_id, ranges=range_names).execute()
-
+        spreadsheetId=spreadsheet_id, ranges=range_data).execute()
     values = results.get('valueRanges', [])
-
     tasks = []
-    simple_tasks=[]
     if not values:
         print('No data found.')
     else:
         for range in values:
             for row in range['values']:
-                if len(row)>6:
-                    tasks.append({'task': row[0], 'description': row[1], 'date': row[7]})
+                tasks.append({'task': row[0], 'description': row[1], 'column': row[2], 'assigned': row[3], 'date': row[5]})
 
-                else:
-                    simple_tasks.append(row[0])
+        print("""
+    Please copy this link in your browser:
 
-        print("\nPlease copy this link in your browser: \n\nhttps://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&name=Praqma%20Sheetconv&key=72ff9314b2d9e1cca758d131e761117e \n\nPress 'accept' to let the script have access to your account.")
+https://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&name=Praqma%20Sheetconv&key=72ff9314b2d9e1cca758d131e761117e
+
+    Press 'accept' to let the script have access to your account.""")
         api_token = input("\nPaste the token you receive on Trello in here: ")
-        print(api_token)
         client = TrelloClient(
             api_key='72ff9314b2d9e1cca758d131e761117e',
             api_secret='a475e69f4a864b6d7d2c729f00a255cefc89194c903d450f8da081ba911b016d',
@@ -113,16 +121,23 @@ def main():
             token_secret='your-oauth-token-secret'
         )
 
-        board = client.add_board(sheet_name)
+        board = client.add_board(title)
+        columns = columns[::-1]
+        for col in columns:
+            board.add_list(col[0])
         id = board.id
-        print("importing tasks....")
-        for old_list in board.all_lists():
-            if old_list.name=='To Do':
-                list=board.get_list(old_list.id)
-        for i in tasks:
-            list.add_card(name=i['task'], due=i['date'],desc=i['description'])
-        for i in simple_tasks:
-            list.add_card(name=i)
-        print("imported. Go into www.trello.com to find your new board named "+sheet_name)
+        print("\n    Loading the goodies into Trello...")
+        for the_list in board.all_lists():
+            for col in columns:
+                if the_list.name == col[0]:
+                    list=board.get_list(the_list.id)
+                    for i in tasks:
+                        if i['column'] == col[0]:
+                            list.add_card(name=i['task'],desc=i['description'], due=i['date'])
+
+        print("\n    Goodies loaded! Go into www.trello.com to find your new board named "+title+"!")
+
+        print("\n    Off you go, organize an outstanding event! \n")
+
 if __name__ == '__main__':
     main()
