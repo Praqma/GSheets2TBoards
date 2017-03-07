@@ -1,7 +1,7 @@
 from __future__ import print_function
 import httplib2
 import os
-from trello import TrelloClient
+import requests
 import webbrowser
 import fileinput
 from apiclient import discovery
@@ -25,10 +25,8 @@ APPLICATION_NAME = 'GSheets2TBoards'
 
 def get_credentials():
     """Gets valid user credentials from storage.
-
     If nothing has been stored, or if the stored credentials are invalid,
     the OAuth2 flow is completed to obtain the new credentials.
-
     Returns:
         Credentials, the obtained credential.
     """
@@ -53,16 +51,12 @@ def get_credentials():
 def main():
 
     print("""
-
     Hi there!
-
     Welcome to Google Sheet to Trello Board converter.
-
         Before we can get started, a couple of things are needed; the spreadsheet's ID.
         Spreadsheet ID is the the collection of numbers and characters between /d/ and / in the sheet's URL like:
         https://docs.google.com/spreadsheets/d/1HFU0lhE45XY7yQTgo35wRKJtNneKma87tES9M82LnGQ/edit
                       where the id is: 1HFU0lhE45XY7yQTgo35wRKJtNneKma87tES9M82LnGQ.
-
     If you are using the 'Template - Conference Planning' with the id in the example, just push enter.
             """)
     spreadsheet_id=input("Enter the spreadsheet's ID:")
@@ -94,7 +88,6 @@ def main():
         color = ""
     columns = results_other['valueRanges'][3]['values']
 
-
     range_data = ['Tasks!A3:G']
     results=service.spreadsheets().values().batchGet(
         spreadsheetId=spreadsheet_id, ranges=range_data).execute()
@@ -109,31 +102,41 @@ def main():
 
         print("""
     Please copy this link in your browser:
-
 https://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&name=Praqma%20Sheetconv&key=72ff9314b2d9e1cca758d131e761117e
-
     Press 'accept' to let the script have access to your account.""")
         api_token = input("\nPaste the token you receive on Trello in here: ")
-        client = TrelloClient(
-            api_key='72ff9314b2d9e1cca758d131e761117e',
-            api_secret='a475e69f4a864b6d7d2c729f00a255cefc89194c903d450f8da081ba911b016d',
-            token=api_token,
-            token_secret='your-oauth-token-secret'
-        )
+        #client = TrelloClient(
+            #api_key='72ff9314b2d9e1cca758d131e761117e',
+            #api_secret='a475e69f4a864b6d7d2c729f00a255cefc89194c903d450f8da081ba911b016d',
+            #token=api_token,
+            #token_secret='your-oauth-token-secret'
+        #)
 
-        board = client.add_board(title)
+        res = requests.post("https://api.trello.com/1/boards?name="+title+"&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+        board = res.json()
+
         columns = columns[::-1]
+        res = requests.get("https://api.trello.com/1/boards/"+board['id']+"/lists?key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+        lists = res.json()
+
+        for l in lists:
+            requests.put("https://api.trello.com/1/lists/"+l['id']+"/closed?value=true&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+
         for col in columns:
-            board.add_list(col[0])
-        id = board.id
+            requests.post("https://api.trello.com/1/boards/"+board['id']+"/lists?name="+col[0]+"&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+
+        res = requests.get("https://api.trello.com/1/lists/"+board['id']+"/lists?key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+
+        res = requests.get("https://api.trello.com/1/boards/"+board['id']+"/lists?key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+        lists = res.json()
+
         print("\n    Loading the goodies into Trello...")
-        for the_list in board.all_lists():
+        for the_list in lists:
             for col in columns:
-                if the_list.name == col[0]:
-                    list=board.get_list(the_list.id)
+                if the_list['name'] == col[0]:
                     for i in tasks:
                         if i['column'] == col[0]:
-                            list.add_card(name=i['task'],desc=i['description'], due=i['date'])
+                            requests.post("https://api.trello.com/1/lists/"+the_list['id']+"/cards?name="+i['task']+"&due="+i['date']+"&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
 
         print("\n    Goodies loaded! Go into www.trello.com to find your new board named "+title+"!")
 
