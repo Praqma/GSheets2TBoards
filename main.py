@@ -77,7 +77,7 @@ def main():
     if spreadsheet_id=='':
         spreadsheet_id = '1HFU0lhE45XY7yQTgo35wRKJtNneKma87tES9M82LnGQ'
 
-    range_others = ['Stem data!B1', 'Stem data!B4', 'Stem data!B5', 'Stem data!A11:A31']
+    range_others = ['Stem data!B2', 'Stem data!B5', 'Stem data!B6', 'Stem data!A12:A32']
     results_other=service.spreadsheets().values().batchGet(
         spreadsheetId=spreadsheet_id, ranges=range_others).execute()
     date = results_other['valueRanges'][0]['values'][0][0]
@@ -105,6 +105,7 @@ def main():
 https://trello.com/1/authorize?expiration=never&scope=read,write,account&response_type=token&name=Praqma%20Sheetconv&key=72ff9314b2d9e1cca758d131e761117e
     Press 'accept' to let the script have access to your account.""")
         api_token = input("\nPaste the token you receive on Trello in here: ")
+        #kept these as documentation from the old client
         #client = TrelloClient(
             #api_key='72ff9314b2d9e1cca758d131e761117e',
             #api_secret='a475e69f4a864b6d7d2c729f00a255cefc89194c903d450f8da081ba911b016d',
@@ -115,7 +116,10 @@ https://trello.com/1/authorize?expiration=never&scope=read,write,account&respons
         res = requests.post("https://api.trello.com/1/boards?name="+title+"&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
         board = res.json()
 
+        res = requests.put("https://api.trello.com/1/boards/"+board['id']+"/prefs/background?value="+color+"&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+
         columns = columns[::-1]
+
         res = requests.get("https://api.trello.com/1/boards/"+board['id']+"/lists?key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
         lists = res.json()
 
