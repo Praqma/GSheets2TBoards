@@ -77,7 +77,7 @@ def main():
     if spreadsheet_id=='':
         spreadsheet_id = '1HFU0lhE45XY7yQTgo35wRKJtNneKma87tES9M82LnGQ'
 
-    range_others = ['Stem data!B2', 'Stem data!B5', 'Stem data!B6', 'Stem data!A12:A32']
+    range_others = ['Stem data!B2', 'Stem data!B5', 'Stem data!B6', 'Stem data!A12:A32', 'Stem data!A36:C80']
     results_other=service.spreadsheets().values().batchGet(
         spreadsheetId=spreadsheet_id, ranges=range_others).execute()
     date = results_other['valueRanges'][0]['values'][0][0]
@@ -87,7 +87,7 @@ def main():
     else:
         color = ""
     columns = results_other['valueRanges'][3]['values']
-
+    members = results_other['valueRanges'][4]['values']
     range_data = ['Tasks!A3:G']
     results=service.spreadsheets().values().batchGet(
         spreadsheetId=spreadsheet_id, ranges=range_data).execute()
@@ -113,8 +113,20 @@ https://trello.com/1/authorize?expiration=never&scope=read,write,account&respons
             #token_secret='your-oauth-token-secret'
         #)
 
+        print("\n    Creating your new and shiny board in Trello...")
+
         res = requests.post("https://api.trello.com/1/boards?name="+title+"&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
         board = res.json()
+
+        #res = requests.put("https://api.trello.com/1/organizations/Praqma?&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+        #print(res)
+
+        #res = requests.post("https://api.trello.com/1/boards/"+board['id']+"/members?idMember=Praqma&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+        #print(res)
+
+        for member in members:
+            if member[2] == 'TRUE':
+                res = requests.put("https://api.trello.com/1/boards/"+board['id']+"/members/"+member[1]+"?idMember="+member[1]+"&type=normal&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
 
         res = requests.put("https://api.trello.com/1/boards/"+board['id']+"/prefs/background?value="+color+"&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
 
