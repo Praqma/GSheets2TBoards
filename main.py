@@ -116,55 +116,54 @@ https://trello.com/1/authorize?expiration=never&scope=read,write,account&respons
 
         print("\n    Creating your new and shiny board in Trello...")
 
-        res = requests.post("https://api.trello.com/1/boards?name="+title+"&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+        res = requests.post("https://api.trello.com/1/boards?name="+title+"&key=72ff9314b2d9e1cca758d131e761117e&token="+api_token)
         board = res.json()
 
         for member in members:
             if member[2] == 'TRUE':
-                res = requests.put("https://api.trello.com/1/boards/"+board['id']+"/members/"+member[1]+"?idMember="+member[1]+"&type=normal&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+                res = requests.put("https://api.trello.com/1/boards/"+board['id']+"/members/"+member[1]+"?idMember="+member[1]+"&type=normal&key=72ff9314b2d9e1cca758d131e761117e&token="+api_token)
 
         # add organization
-        res = requests.put("https://api.trello.com/1/boards/"+board['id']+"/idOrganization?value=praqma&type=normal&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+        res = requests.put("https://api.trello.com/1/boards/"+board['id']+"/idOrganization?value=praqma&type=normal&key=72ff9314b2d9e1cca758d131e761117e&token="+api_token)
 
         # team visibility
-        res = requests.put("https://api.trello.com/1/boards/"+board['id']+"/prefs/permissionLevel?value=org&type=normal&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
-
+        res = requests.put("https://api.trello.com/1/boards/"+board['id']+"/prefs/permissionLevel?value=org&type=normal&key=72ff9314b2d9e1cca758d131e761117e&token="+api_token)
+        
         # background
-        res = requests.put("https://api.trello.com/1/boards/"+board['id']+"/prefs/background?value="+color+"&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
-
+        res = requests.put("https://api.trello.com/1/boards/"+board['id']+"/prefs/background?value="+color+"&key=72ff9314b2d9e1cca758d131e761117e&token="+api_token)
+        
         columns = columns[::-1]
 
-        res = requests.get("https://api.trello.com/1/boards/"+board['id']+"/lists?key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+        res = requests.get("https://api.trello.com/1/boards/"+board['id']+"/lists?key=72ff9314b2d9e1cca758d131e761117e&token="+api_token)
         lists = res.json()
 
         for l in lists:
-            requests.put("https://api.trello.com/1/lists/"+l['id']+"/closed?value=true&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+            requests.put("https://api.trello.com/1/lists/"+l['id']+"/closed?value=true&key=72ff9314b2d9e1cca758d131e761117e&token="+api_token)
 
         for col in columns:
-            requests.post("https://api.trello.com/1/boards/"+board['id']+"/lists?name="+col[0]+"&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+            requests.post("https://api.trello.com/1/boards/"+board['id']+"/lists?name="+col[0]+"&key=72ff9314b2d9e1cca758d131e761117e&token="+api_token)
 
-        res = requests.get("https://api.trello.com/1/lists/"+board['id']+"/lists?key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+        res = requests.get("https://api.trello.com/1/lists/"+board['id']+"/lists?key=72ff9314b2d9e1cca758d131e761117e&token="+api_token)
 
-        res = requests.get("https://api.trello.com/1/boards/"+board['id']+"/lists?key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+        res = requests.get("https://api.trello.com/1/boards/"+board['id']+"/lists?key=72ff9314b2d9e1cca758d131e761117e&token="+api_token)
         lists = res.json()
-
-        print("\n    Loading the goodies into Trello...")
+        print("\n    Loading the goodies into Trello... ",len(tasks)," tasks to be imported")
         for the_list in lists:
             for col in columns:
                 if the_list['name'] == col[0]:
                     for i in tasks:
                         if i['column'] == col[0]:
                             #create card
-                            res = requests.post("https://api.trello.com/1/lists/"+the_list['id']+"/cards?name="+i['task']+"&due="+i['date']+"&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+                            res = requests.post("https://api.trello.com/1/lists/"+the_list['id']+"/cards?name="+i['task']+"&due="+i['date']+"&key=72ff9314b2d9e1cca758d131e761117e&token="+api_token)
                             card = res.json()
                             # get the short URL
-                            res = requests.get("https://api.trello.com/1/cards/"+card['id']+"?fields=shortLink&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+                            res = requests.get("https://api.trello.com/1/cards/"+card['id']+"?fields=shortLink&key=72ff9314b2d9e1cca758d131e761117e&token="+api_token)
                             card_details = res.json()
                             if(i['assigned']):
                                 # get the memberId
-                                res = requests.get("https://api.trello.com/1/members/"+i['assigned']+"?fields=id&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+                                res = requests.get("https://api.trello.com/1/members/"+i['assigned']+"?fields=id&key=72ff9314b2d9e1cca758d131e761117e&token="+api_token)
                                 member = res.json()
-                                res = requests.post("https://api.trello.com/1/cards/"+ card_details['shortLink']+"/idMembers?value="+member['id']+"&key=72ff9314b2d9e1cca758d131e761117e&token=4dd3769e27219fa66d54faa1a08e620cf2e555952d80b2bff302c476a8a8f8c0")
+                                res = requests.post("https://api.trello.com/1/cards/"+ card_details['shortLink']+"/idMembers?value="+member['id']+"&key=72ff9314b2d9e1cca758d131e761117e&token="+api_token)
 
         print("\n    Goodies loaded! Go into www.trello.com to find your new board named "+title+"!")
 
